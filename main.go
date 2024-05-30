@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/layout"
@@ -17,9 +18,18 @@ type C = layout.Context
 type D = layout.Dimensions
 
 var progress float32
-var progressIncrementer chan float32
+var progressIncrementer chan float32	// progressIncrementer is the channel into which we send values, in this case of type float32
+var boiling bool
 
 func main() {
+	// setup a separate channel to provide ticks to increment progress
+	progressIncrementer = make(chan float32)
+	go func() {
+		for {
+			time.Sleep(time.Second / 25)
+			progressIncrementer <- 0.004
+		}
+	}()
 	go func() {
 		// create new window
 		w := new(app.Window)
@@ -55,6 +65,10 @@ func draw(w *app.Window) error {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, typ) // define a new GRAPHICAL CONTEXT (gtx)
 
+			if startButton.Clicked(gtx) {
+				boiling = !boiling
+			}
+
 			layout.Flex{
 				// vertical alignment, from top to bottom
 				Axis: layout.Vertical,
@@ -75,7 +89,13 @@ func draw(w *app.Window) error {
 						return margins.Layout(gtx,
 							// THREE: ... and finally within the margins, we define and lay out the button
 							func(gtx C) D {
-								btn := material.Button(th, &startButton, "Start") // define button
+								var text string
+								if !boiling {
+									text = "Start"
+								} else {
+									text = "Stop"
+								}
+								btn := material.Button(th, &startButton, text) // define button
 								return btn.Layout(gtx)
 							},
 						)
