@@ -85,6 +85,12 @@ func draw(w *app.Window) error {
 				// Empty space is left at the start, i.e. at the top
 				Spacing: layout.SpaceStart,
 			}.Layout(gtx,
+				layout.Rigid(
+					func(gtx C) D {
+						bar := material.ProgressBar(th, progress) // use the global progress variable
+						return bar.Layout(gtx)
+					},
+				),
 				layout.Rigid( // Rigid() accepts a WIDGET. A widget is simply something that returns its own DIMENSIONS.
 					func(gtx C) D {
 						// ONE: First define margins around the button using layout.Inset ...
@@ -111,14 +117,7 @@ func draw(w *app.Window) error {
 						)
 					},
 				),
-				layout.Rigid(
-					func(gtx C) D {
-						bar := material.ProgressBar(th, progress) // use the global progress variable
-						return bar.Layout(gtx)
-					},
-				),
 			)
-
 			typ.Frame(gtx.Ops) // send the operations from the context gtx to the FrameEvent
 
 		// and this is sent when the app should exit
